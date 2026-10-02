@@ -3,6 +3,7 @@ dist/
 .state/
 native/**/bin/
 native/**/obj/
+native/**/portable/
 *.log
 /.codex/
 .env

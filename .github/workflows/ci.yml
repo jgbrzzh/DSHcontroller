@@ -1,8 +1,12 @@
-name: Windows checks
+name: Windows build
 
 on:
   push:
+    branches: [main]
+    tags: ['v*']
   pull_request:
+    branches: [main]
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -23,3 +27,39 @@ jobs:
       - run: npm run typecheck
       - run: npm test
       - run: npm run build
+      - name: Build and verify portable Windows package
+        shell: pwsh
+        run: ./scripts/package-windows.ps1
+      - name: Upload portable package and source
+        uses: actions/upload-artifact@v4
+        with:
+          name: DSHcontroller-win-x64
+          path: |
+            .state/portable-build/DSHcontroller-win-x64.zip
+            .state/portable-build/DSHcontroller-source.zip
+            .state/portable-build/SHA256SUMS.txt
+          if-no-files-found: error
+          retention-days: 30
+          compression-level: 0
+          include-hidden-files: true
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: check
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v5
+        with:
+          name: DSHcontroller-win-x64
+          path: release-assets
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          version=$(node -p "JSON.parse(require('fs').readFileSync('package.json')).version")
+          test "$RELEASE_TAG" = "v$version"
+          gh release create "$RELEASE_TAG" --verify-tag --title "DSHcontroller $RELEASE_TAG" --notes-file .github/release-notes.md release-assets/*

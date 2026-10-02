@@ -5,8 +5,9 @@ import { readFile } from 'node:fs/promises';
 import { resolve, relative } from 'node:path';
 import { tools } from '../tools.js';
 import { connectController } from '../ipc.js';
-import { STATE, errorOf } from '../common.js';
-const server=new McpServer({name:'dshcontroller',version:'0.1.0'});
+import { ROOT, STATE, errorOf } from '../common.js';
+const {version}=JSON.parse(await readFile(resolve(ROOT,'package.json'),'utf8'));
+const server=new McpServer({name:'dshcontroller',version});
 let connected:Awaited<ReturnType<typeof connectController>>|undefined;
 for(const [name,definition] of Object.entries(tools)){
   server.registerTool(name,{description:definition.description,inputSchema:definition.schema,annotations:{readOnlyHint:/discover|status|list|read|_get|_wait|snapshot/.test(name),destructiveHint:/stop|change|restart|update|rollback|action/.test(name)}},async (args:Record<string,unknown>):Promise<CallToolResult>=>{

@@ -1,6 +1,6 @@
 {
   "name": "dshcontroller",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "type": "module",
   "engines": {
@@ -8,6 +8,7 @@
   },
   "scripts": {
     "build": "tsc && dotnet build native/DshUiBridge/DshUiBridge.csproj -c Release --nologo",
+    "package:windows": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/package-windows.ps1",
     "typecheck": "tsc --noEmit",
     "test": "tsx --test tests/*.test.ts",
     "start": "node --disable-warning=ExperimentalWarning dist/entrypoints/mcp.js",

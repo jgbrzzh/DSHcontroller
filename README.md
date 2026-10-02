@@ -6,7 +6,7 @@ A local MCP server for controlling existing DeepSeek Harness sessions and the DS
 
 DSHcontroller 提供 **28 个 MCP 工具**，覆盖会话、任务、模型、设置、插件与原生界面。任务由 DSH 已配置的模型执行，Controller 使用 DSH 的 HTTP RPC 和 WebSocket 事件观察结果，并通过 Windows UI Automation 操作界面。
 
-> 当前为 Windows 上的预览版本，适配 DSH **0.1.7-rc.2**。该项目独立维护，未隶属于 DeepSeek 或 OpenAI。GitHub 发布的是源码，目前没有 npm 安装包或预编译发行包。
+> 当前为 Windows x64 上的预览版本，适配 DSH **0.1.7-rc.2**。该项目独立维护，未隶属于 DeepSeek 或 OpenAI。普通用户推荐下载便携 ZIP，内含运行时，无需安装开发工具或重新构建。源码保留给开发者，目前不发布 npm 安装包。
 
 ## 能做什么
 
@@ -23,9 +23,9 @@ DSHcontroller 提供 **28 个 MCP 工具**，覆盖会话、任务、模型、�
 
 | 项目 | 要求 |
 | --- | --- |
-| 系统 | Windows |
-| Node.js | 24 或以上，需提供 node:sqlite |
-| .NET | .NET 8 SDK，以及 Windows Desktop Runtime 8 |
+| 系统 | Windows x64；ARM64 尚未适配 |
+| 便携包 | 自带 Node.js 24、生产依赖和 .NET 8 运行时，无需另装 |
+| 源码开发 | Node.js 24 或以上、.NET 8 SDK 与 Windows Desktop Runtime 8 |
 | DSH | 已启动的 0.1.7-rc.2 实例 |
 | 界面控制 | DSHL 原生窗口；最小化时先恢复 |
 
@@ -33,7 +33,28 @@ DSHcontroller 提供 **28 个 MCP 工具**，覆盖会话、任务、模型、�
 
 ## 快速开始
 
-先安装上述运行环境，在 DSHL 中启动 DSH，再执行：
+1. 从 [最新 Release](https://github.com/jgbrzzh/DSHcontroller/releases/latest) 下载 **DSHcontroller-win-x64.zip**。选择这个附件，GitHub 自动生成的 Source code ZIP 是开发源码。
+2. 完整解压到普通用户可写的固定目录，例如 `C:\Tools\DSHcontroller`。不要在压缩包内直接运行；不要只复制启动脚本。
+3. 双击 **check.cmd**，检查自带运行时、原生 DPAPI 桥接、MCP 初始化、28 个工具和实例发现。没有启动 DSH 时，发现 0 个实例是正常结果。
+4. 双击 **setup.cmd**，在当前目录生成 **codex-mcp.toml**，显示已经填写本机绝对路径的配置。将整个配置块加入 Codex 的 MCP 配置，然后重新加载 MCP。setup 不会覆盖你已有的客户端配置。
+5. 在 DSHL 中启动 DSH，再让 Codex 调用 dsh_discover → dsh_attach。模型账户和密钥沿用 DSH 中的配置。
+
+便携包可以离线启动自身，不需要 npm install、Node 安装或 .NET 安装；模型服务和包下载仍需要相应网络。start-mcp.cmd 是其他 stdio MCP 客户端的启动入口，**不要把双击后等待输入的终端当成报错**；它通常由客户端启动。
+
+需要在终端直接发现实例或关闭 Controller 时：
+
+~~~powershell
+.\dshcontroller.cmd dsh_discover
+.\dshcontroller.cmd shutdown
+~~~
+
+关闭 MCP 客户端不会取消已经交给 DSH 的任务。升级前关闭旧 Controller，再解压新版本、运行 setup 并更新客户端路径。同一个目录中的 CLI 和 MCP 共用后台服务；移动目录后必须重新运行 setup。`.state/` 属于本机工作数据，按需自行保留，不能跨 Windows 用户复制其中的 DPAPI 凭据。
+
+未发布的最新构建可从 [Actions](https://github.com/jgbrzzh/DSHcontroller/actions/workflows/ci.yml) 的成功运行中下载 **DSHcontroller-win-x64** Artifact；它需要 GitHub 登录，通常保留 30 天。下载外层 Artifact ZIP 后，再解压其中的 DSHcontroller-win-x64.zip。正式 Release 附件可直接下载。
+
+### 从源码运行（开发者）
+
+安装开发环境，在 DSHL 中启动 DSH，再执行：
 
 ~~~powershell
 git clone https://github.com/jgbrzzh/DSHcontroller.git
@@ -46,7 +67,7 @@ npm run cli -- dsh_discover
 
 build 编译 TypeScript 与 C# UI 桥接程序。首次工具调用自动启动后台 Controller，同一个检出目录中的 CLI 和 MCP 共用它。
 
-关闭 MCP 客户端不会取消已经交给 DSH 的任务。更新代码后执行以下命令关闭旧 Controller，下次调用会加载新版本：
+源码更新后执行以下命令关闭旧 Controller，下次调用会加载新版本：
 
 ~~~powershell
 npm run cli -- shutdown
@@ -54,7 +75,9 @@ npm run cli -- shutdown
 
 ## 接入 Codex
 
-将下面配置加入 Codex 的 MCP 设置，或写入受信任项目的 .codex/config.toml。**把示例路径替换为自己的检出目录**；不在 PATH 中的 node 需要填写绝对路径。
+**便携包用户直接使用 setup.cmd 生成的 codex-mcp.toml**：command 会指向包内 runtime/node/node.exe。将配置加入 Codex 的 MCP 设置或受信任项目的 .codex/config.toml。
+
+下面是源码运行示例。**把示例路径替换为自己的检出目录**；不在 PATH 中的 node 需要填写绝对路径。
 
 ~~~toml
 [mcp_servers.dshcontroller]
@@ -143,7 +166,22 @@ npm run verify:stop -- <test-session-id>
 npm run verify:ui -- <test-session-id>
 ~~~
 
-verify:task 可加 --session=<test-session-id> 复用专用会话。不要将停止验收指向工作中的普通会话。CI 只执行离线测试与编译，不调用模型或读取用户 DSH。
+verify:task 可加 --session=<test-session-id> 复用专用会话。不要将停止验收指向工作中的普通会话。CI 执行离线测试、编译、便携包 MCP 与原生桥接验收，不调用模型、不操作用户窗口。
+
+### 自动打包与发布
+
+[Windows build 工作流](.github/workflows/ci.yml) 在 main 推送、PR 和手动运行时测试、编译并上传便携包。推送与 package.json 版本一致的 v 标签（例如 v0.1.1）时，测试和打包成功后自动创建 GitHub Release，附便携 ZIP、对应源码 ZIP 和 SHA256SUMS.txt。
+
+Windows 开发者可执行 `npm run package:windows` 复现打包；先安装源码开发依赖。脚本安装锁文件中的生产依赖、发布 win-x64 自带运行时的桥接、下载当前 Node 24 版本并核对官方 SHA-256、附加对应源码及第三方许可，然后在不包含已安装 Node/.NET 的 PATH 下进行 MCP stdio 和 DPAPI 检查。产物位于 `.state/portable-build/`，验收时生成的 `.state` 不会进入 ZIP。
+
+上面的 npm 验收命令及 Agent Teams 可选诊断脚本面向源码开发环境；普通用户只需便携包的 check.cmd、setup.cmd 和客户端配置。
+
+便携包的 BUILD_INFO.json 记录源码提交、Node 版本与归档校验值。DSHcontroller-source.zip 是本包对应的开发源码，包含构建脚本；Node 的许可在 runtime/node/LICENSE，Microsoft 运行时许可在 runtime/dotnet-notices，生产依赖的许可保留在各自 node_modules 包中。
+
+~~~powershell
+# 检查下载文件：将结果与同一 Release 的 SHA256SUMS.txt 比较
+Get-FileHash .\DSHcontroller-win-x64.zip -Algorithm SHA256
+~~~
 
 ~~~text
 src/entrypoints/       MCP、后台服务、CLI、验收入口
