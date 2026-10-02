@@ -1,0 +1,9 @@
+# Add this table to your Codex config. Replace the two project paths with your checkout.
+# If node is not on PATH, set command to its absolute executable path.
+[mcp_servers.dshcontroller]
+command = 'node'
+args = ['--disable-warning=ExperimentalWarning', 'C:\path\to\DSHcontroller\dist\entrypoints\mcp.js']
+cwd = 'C:\path\to\DSHcontroller'
+startup_timeout_sec = 20
+tool_timeout_sec = 60
+enabled = true

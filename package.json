@@ -1,0 +1,49 @@
+{
+  "name": "dshcontroller",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "scripts": {
+    "build": "tsc && dotnet build native/DshUiBridge/DshUiBridge.csproj -c Release --nologo",
+    "typecheck": "tsc --noEmit",
+    "test": "tsx --test tests/*.test.ts",
+    "start": "node --disable-warning=ExperimentalWarning dist/entrypoints/mcp.js",
+    "cli": "node --disable-warning=ExperimentalWarning dist/entrypoints/cli.js",
+    "verify:live": "node --disable-warning=ExperimentalWarning dist/entrypoints/verify-live.js",
+    "verify:task": "node --disable-warning=ExperimentalWarning dist/entrypoints/verify-task.js",
+    "verify:stop": "node --disable-warning=ExperimentalWarning dist/entrypoints/verify-stop.js",
+    "verify:ui": "node --disable-warning=ExperimentalWarning dist/entrypoints/verify-ui.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "1.31.0",
+    "ws": "8.22.0",
+    "zod": "4.6.5"
+  },
+  "devDependencies": {
+    "typescript": "7.0.2",
+    "tsx": "4.23.15",
+    "@types/node": "24.10.1",
+    "@types/ws": "8.18.1"
+  },
+  "description": "Windows-local MCP server for existing DeepSeek Harness sessions and DSHL UI automation",
+  "license": "GPL-3.0-only",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jgbrzzh/DSHcontroller.git"
+  },
+  "homepage": "https://github.com/jgbrzzh/DSHcontroller#readme",
+  "bugs": {
+    "url": "https://github.com/jgbrzzh/DSHcontroller/issues"
+  },
+  "keywords": [
+    "mcp",
+    "codex",
+    "deepseek-harness",
+    "dsh",
+    "windows",
+    "uia"
+  ]
+}

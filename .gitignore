@@ -1,0 +1,17 @@
+node_modules/
+dist/
+.state/
+native/**/bin/
+native/**/obj/
+*.log
+/.codex/
+.env
+.env.*
+!.env.example
+*.dpapi
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
+*.db
+*.bak
+*.tmp
