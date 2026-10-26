@@ -4,12 +4,13 @@ on:
   push:
     branches: [main]
     tags: ['v*']
+    paths-ignore:
+      - '.github/workflows/cleanup-artifacts.yml'
   pull_request:
     branches: [main]
   workflow_dispatch:
 
 permissions:
-  actions: write
   contents: read
 
 jobs:
@@ -31,31 +32,7 @@ jobs:
       - name: Build and verify portable Windows package
         shell: pwsh
         run: ./scripts/package-windows.ps1
-      - name: Purge stale Actions artifacts (one-time maintenance)
-        if: ${{ github.event_name == 'push' && contains(github.event.head_commit.message, 'chore: purge stale Actions artifacts') }}
-        shell: pwsh
-        env:
-          GH_TOKEN: ${{ github.token }}
-          GH_REPO: ${{ github.repository }}
-        run: |
-          $headers = @{
-            Authorization = "Bearer $env:GH_TOKEN"
-            Accept = "application/vnd.github+json"
-            "X-GitHub-Api-Version" = "2022-11-28"
-          }
-          $deleted = 0
-          do {
-            $response = Invoke-RestMethod -Headers $headers -Uri "https://api.github.com/repos/$env:GH_REPO/actions/artifacts?per_page=100&name=DSHcontroller-win-x64"
-            $artifacts = @($response.artifacts)
-            foreach ($artifact in $artifacts) {
-              Invoke-RestMethod -Method Delete -Headers $headers -Uri "https://api.github.com/repos/$env:GH_REPO/actions/artifacts/$($artifact.id)"
-              Write-Host "Deleted artifact $($artifact.id) ($($artifact.size_in_bytes) bytes)"
-              $deleted++
-            }
-          } while ($artifacts.Count -gt 0)
-          Write-Host "Deleted $deleted stale DSHcontroller artifact(s)."
       - name: Upload portable package and source
-        if: ${{ github.event_name != 'push' || contains(github.event.head_commit.message, 'chore: purge stale Actions artifacts') == false }}
         uses: actions/upload-artifact@v4
         with:
           name: DSHcontroller-win-x64
