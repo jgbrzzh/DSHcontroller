@@ -32,7 +32,7 @@ jobs:
         shell: pwsh
         run: ./scripts/package-windows.ps1
       - name: Purge stale Actions artifacts (one-time maintenance)
-        if: github.event_name == 'push' && contains(github.event.head_commit.message, 'chore: purge stale Actions artifacts')
+        if: ${{ github.event_name == 'push' && contains(github.event.head_commit.message, 'chore: purge stale Actions artifacts') }}
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
@@ -55,7 +55,7 @@ jobs:
           } while ($artifacts.Count -gt 0)
           Write-Host "Deleted $deleted stale DSHcontroller artifact(s)."
       - name: Upload portable package and source
-        if: github.event_name != 'push' || !contains(github.event.head_commit.message, 'chore: purge stale Actions artifacts')
+        if: ${{ github.event_name != 'push' || contains(github.event.head_commit.message, 'chore: purge stale Actions artifacts') == false }}
         uses: actions/upload-artifact@v4
         with:
           name: DSHcontroller-win-x64
